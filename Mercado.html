@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>🔥 Código hambre 😋</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #121212;
+    color: white;
+}
+
+header {
+    text-align: center;
+    padding: 20px;
+    font-size: 22px;
+    background: black;
+}
+
+.card {
+    background: #1e1e1e;
+    margin: 15px;
+    border-radius: 15px;
+    overflow: hidden;
+}
+
+.card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.card-content {
+    padding: 10px;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+button:active {
+    transform: scale(0.95);
+}
+
+.add { background: #00c853; color: white; }
+.buy { background: red; color: white; }
+.codigo { background: #ff9800; color: black; }
+.delete { background: #444; color: white; }
+
+input, select {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 10px;
+    border: none;
+}
+
+nav {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: black;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+}
+
+.carrito {
+    position: fixed;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    width: 55px;
+    height: 55px;
+    background: red;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+@keyframes pop {
+    0% { transform: scale(1) translateY(-50%); }
+    50% { transform: scale(1.2) translateY(-50%); }
+    100% { transform: scale(1) translateY(-50%); }
+}
+
+.carrito.animar {
+    animation: pop 0.3s;
+}
+
+#contenido {
+    animation: fadeIn 0.3s ease;
+    padding-bottom: 100px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
+</head>
+
+<body onclick="activarAudio()">
+
+<header>🔥😋 CODIGO HAMBRE 😋🔥</header>
+
+<div id="contenido"></div>
+
+<button class="carrito" onclick="playClick();verCarrito()">
+🛒 <span id="contador">0</span>
+</button>
+
+<nav>
+<button onclick="playClick();mostrarMenu()">Menú</button>
+<button onclick="playClick();mostrarPromos()">Promos</button>
+<button onclick="playClick();mostrarUbicacion()">Ubicación</button>
+</nav>
+
+<script>
+
+/* 🔊 SONIDOS */
+let clickSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-select-click-1109.mp3");
+let addSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-modern-click-box-check-1120.mp3");
+let deleteSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-quick-lock-sound-2857.mp3");
+let successSound = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-achievement-bell-600.mp3");
+
+/* 🍔 SONIDOS POR PRODUCTO */
+let sonidosProductos = {
+    "Hamburguesa": new Audio("https://assets.mixkit.co/sfx/preview/mixkit-fast-food-bite-2939.mp3"),
+    "Empanadas": new Audio("https://assets.mixkit.co/sfx/preview/mixkit-crunchy-bite-3058.mp3"),
+    "Sopa Paraguaya": new Audio("https://assets.mixkit.co/sfx/preview/mixkit-eating-chips-81.mp3")
+};
+
+/* 🎵 MÚSICA */
+let musica = new Audio("https://assets.mixkit.co/music/preview/mixkit-hip-hop-02-738.mp3");
+musica.loop = true;
+musica.volume = 0.2;
+
+let audioActivado = false;
+
+/* 🔥 ACTIVAR AUDIO */
+function activarAudio(){
+    if(!audioActivado){
+        audioActivado = true;
+
+        clickSound.play().then(()=>clickSound.pause());
+        addSound.play().then(()=>addSound.pause());
+        deleteSound.play().then(()=>deleteSound.pause());
+        successSound.play().then(()=>successSound.pause());
+
+        musica.play();
+    }
+}
+
+/* 📳 VIBRACIÓN */
+function vibrar(){
+    if(navigator.vibrate){
+        navigator.vibrate(100);
+    }
+}
+
+/* 🗣️ VOZ */
+function hablar(texto){
+    let voz = new SpeechSynthesisUtterance(texto);
+    voz.lang = "es-ES";
+    speechSynthesis.speak(voz);
+}
+
+/* DATA */
+let carrito = [];
+let datosPedido = {};
+const contenido = document.getElementById("contenido");
+
+/* CLICK */
+function playClick(){
+    clickSound.currentTime = 0;
+    clickSound.play();
+    vibrar();
+}
+
+/* SONIDO PRODUCTO */
+function playProducto(nombre){
+    let s = sonidosProductos[nombre];
+    if(s){
+        s.currentTime = 0;
+        s.play();
+    }
+    vibrar();
+}
+
+/* CONTADOR */
+function actualizarContador(){
+    document.getElementById("contador").innerText = carrito.length;
+}
+
+/* MENÚ */
+function mostrarMenu(){
+    contenido.innerHTML = `
+        ${card("Sopa Paraguaya",3000,"https://imag.bonviveur.com/sopa-paraguaya-lista-para-consumir.jpg")}
+        ${card("Empanadas",3000,"https://i.ytimg.com/vi/LCypPW9tBU0/hq720.jpg")}
+        ${card("Hamburguesa",3000,"https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=800")}
+    `;
+}
+
+/* PROMOS */
+function mostrarPromos(){
+    contenido.innerHTML = `
+    <div class="card"><div class="card-content">
+        <h2>🔥 Codigos 🔥</h2>
+
+        <button class="codigo" onclick="agregarPromo('Codigo 1',50000)">
+            1 docena empanadas + sopa paraguaya - $50.000
+        </button>
+
+        <button class="codigo" onclick="agregarPromo('Codigo 2',27000)">
+            1/2 docena empanadas + 1/2 sopa paraguaya - $27.000
+        </button>
+
+        <button class="codigo" onclick="agregarPromo('Codigo 3',17000)">
+            3 empanadas + 3 sopa paraguaya - $17.000
+        </button>
+
+        <p>⏰ 24hs de anticipación</p>
+    </div></div>
+    `;
+}
+
+function agregarPromo(nombre,precio){
+    carrito.push({nombre,precio,cantidad:1});
+    actualizarContador();
+    playProducto(nombre);
+    animCarrito();
+}
+
+/* CARD */
+function card(n,p,img){
+    let id = n.replace(/\s+/g,"");
+
+    return `
+    <div class="card">
+        <img src="${img}" alt="${n}">
+        <div class="card-content">
+            <h3>${n}</h3>
+            <p>$${p}</p>
+
+            <input type="number" value="1" min="1" id="${id}">
+
+            <button class="add" onclick="agregar('${n}',${p},'${id}')">
+                Agregar 🛒
+            </button>
+        </div>
+    </div>`;
+}
+
+/* AGREGAR */
+function agregar(n,p,id){
+    let c = document.getElementById(id).value;
+
+    carrito.push({
+        nombre:n,
+        precio:p,
+        cantidad:parseInt(c)
+    });
+
+    actualizarContador();
+    playProducto(n);
+    animCarrito();
+}
+
+/* ANIMACIÓN */
+function animCarrito(){
+    let btn = document.querySelector(".carrito");
+
+    btn.classList.add("animar");
+
+    setTimeout(()=>{
+        btn.classList.remove("animar");
+    },300);
+}
+
+/* VER CARRITO */
+function verCarrito(){
+
+    if(carrito.length===0){
+        contenido.innerHTML="<h2>Carrito vacío 😢</h2>";
+        return;
+    }
+
+    let total=0;
+
+    let html="<h2>🧾 Pedido</h2>";
+
+    carrito.forEach((p,i)=>{
+
+        let sub=p.precio*p.cantidad;
+
+        total+=sub;
+
+        html+=`
+        <div style="background:#1e1e1e;padding:10px;margin:5px;border-radius:10px;">
+
+        <b>${p.nombre}</b><br>
+
+        Cantidad: ${p.cantidad}<br>
+
+        Subtotal: $${sub}<br>
+
+        <button class="delete" onclick="eliminar(${i})">
+            ❌ Eliminar
+        </button>
+
+        </div>`;
+    });
+
+    html+=`
+
+    <h3>Total: $${total}</h3>
+
+    <input id="nombre" placeholder="Nombre">
+
+    <input id="direccion" placeholder="Dirección">
+
+    <select id="tipo">
+        <option>Retiro</option>
+        <option>Delivery</option>
+    </select>
+
+    <button class="buy" onclick="comprar(${total})">
+        Confirmar pedido
+    </button>
+
+    <button onclick="mostrarMenu()">
+        ⬅️ Seguir comprando
+    </button>`;
+
+    contenido.innerHTML = html;
+}
+
+/* ELIMINAR */
+function eliminar(i){
+
+    carrito.splice(i,1);
+
+    actualizarContador();
+
+    deleteSound.currentTime = 0;
+    deleteSound.play();
+
+    vibrar();
+
+    verCarrito();
+}
+
+/* CONFIRMAR */
+function comprar(totalBase){
+
+    let n = document.getElementById("nombre").value;
+    let d = document.getElementById("direccion").value;
+    let tipo = document.getElementById("tipo").value;
+
+    if(!n || !d){
+        return alert("Completa los datos");
+    }
+
+    let envio = tipo==="Delivery" ? 500 : 0;
+
+    let total = totalBase + envio;
+
+    datosPedido = {n,d,tipo,total};
+
+    successSound.currentTime = 0;
+    successSound.play();
+
+    vibrar();
+
+    hablar("Pedido confirmado. Gracias por comprar");
+
+    /* 📦 PRODUCTOS */
+    let productosTexto = "";
+
+    carrito.forEach(p=>{
+        productosTexto += `• ${p.nombre} x${p.cantidad}\n`;
+    });
+
+    /* 📲 MENSAJE WHATSAPP */
+    let mensaje =
+`🍔 NUEVO PEDIDO 🍔
+
+👤 Nombre: ${n}
+
+📍 Dirección: ${d}
+
+🚚 Tipo: ${tipo}
+
+📦 Productos:
+${productosTexto}
+
+💰 Total: $${total}`;
+
+    /* 📱 TU NÚMERO */
+    let numero = "5521982831832";
+
+    /* 📲 ABRIR WHATSAPP */
+    let url = `https://wa.me/${numero}?text=${encodeURIComponent(mensaje)}`;
+
+    window.open(url, "_blank");
+
+    /* 🧾 RESUMEN */
+    let resumen = `
+    <h2>🧾 Pedido Confirmado</h2>
+
+    <div style="background:#1e1e1e;padding:15px;border-radius:10px;margin:10px;">
+
+    <b>👤 Nombre:</b> ${n}<br>
+
+    <b>📍 Dirección:</b> ${d}<br>
+
+    <b>🚚 Tipo:</b> ${tipo}<br><br>
+
+    <b>🍔 Productos:</b><br>`;
+
+    carrito.forEach(p=>{
+        resumen += `• ${p.nombre} x${p.cantidad}<br>`;
+    });
+
+    resumen += `
+
+    <br><b>💰 Total: $${total}</b>
+
+    </div>
+
+    <button onclick="mostrarMenu()">
+        ⬅️ Volver
+    </button>`;
+
+    contenido.innerHTML = resumen;
+}
+
+/* UBICACIÓN */
+function mostrarUbicacion(){
+
+    contenido.innerHTML = `
+    <h2>📍 Ubicación</h2>
+
+    <iframe
+    src="https://www.google.com/maps?q=Amberes 1887&output=embed"
+    width="100%"
+    height="300"
+    style="border-radius:10px;border:none;">
+    </iframe>
+
+    <button class="buy" onclick="comoLlegar()">
+        🚗 Cómo llegar
+    </button>
+    `;
+}
+
+/* BOTÓN COMO LLEGAR */
+function comoLlegar(){
+
+    let url =
+    "https://www.google.com/maps/dir/?api=1&destination=Amberes 1887";
+
+    window.open(url, "_blank");
+}
+
+window.onload = mostrarMenu;
+
+</script>
+
+</body>
+</html>
